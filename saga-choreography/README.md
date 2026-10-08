@@ -2,6 +2,12 @@
 
 A movie seat booking example built as three Spring Boot services. Services coordinate through Kafka events; the shared `movie-booking-commons` module contains the event and API DTO types.
 
+## See the booking flow
+
+The animation below shows how a booking request moves through the services. If payment fails, the seat inventory service releases the reserved seats.
+
+![Animated movie booking saga: Booking Service sends a booking event to Seat Inventory, which reserves seats and sends a reservation event to Payment; payment results return to Seat Inventory.](docs/images/booking-saga-flow.gif)
+
 ## Services and technologies
 
 | Component | Port | Implementation |
