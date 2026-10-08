@@ -1,0 +1,70 @@
+{
+  "info": {
+    "_postman_id": "dd9c8900-b6fd-4a7f-a17f-2d52777f5bc8",
+    "name": "Saga Choreography Movie Booking",
+    "description": "HTTP requests for the movie booking saga. Booking Service exposes the HTTP API; Seat Inventory and Payment are Kafka-driven consumers and are observed in their application logs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:9191",
+      "type": "string"
+    },
+    {
+      "key": "showId",
+      "value": "SHOW_101",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Book available seat (simulated payment success)",
+      "description": "Uses seeded seat A1. The payment service succeeds for amounts at or below 2000. Confirm the asynchronous result in the Booking, Seat Inventory, and Payment service logs.",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reservationId\": \"{{$guid}}\",\n  \"showId\": \"{{showId}}\",\n  \"seatIds\": [\"A1\"],\n  \"userId\": \"postman-user\",\n  \"timestamp\": \"{{$isoTimestamp}}\",\n  \"amount\": 1500\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/booking-service/bookSeat"
+      },
+      "response": []
+    },
+    {
+      "name": "Book available seat (simulated payment failure)",
+      "description": "Uses seeded seat A2. Amounts above 2000 trigger simulated payment failure and seat release. Run after importing the seed data; inspect service logs for the asynchronous rollback.",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reservationId\": \"{{$guid}}\",\n  \"showId\": \"{{showId}}\",\n  \"seatIds\": [\"A2\"],\n  \"userId\": \"postman-user\",\n  \"timestamp\": \"{{$isoTimestamp}}\",\n  \"amount\": 2500\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/booking-service/bookSeat"
+      },
+      "response": []
+    }
+  ]
+}
