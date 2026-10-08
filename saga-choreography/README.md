@@ -22,7 +22,7 @@ Infrastructure: MySQL on `localhost:3306` and Kafka on `localhost:9092`. Both da
 - MySQL 8 (or a compatible MySQL server)
 - Apache Kafka reachable at `localhost:9092`
 
-The commands below are run from the repository root. The checked-in Maven wrapper is also available in each service folder (`./mvnw`).
+The commands below are run from this project directory, which contains the service folders.
 
 ### 2. Start MySQL and prepare the schema
 
