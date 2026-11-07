@@ -8,13 +8,17 @@ import com.kumar.request.BookingRequest;
 import com.kumar.response.BookingResponse;
 import com.kumar.utils.mapper.EntityToBookingResponseMapper;
 import com.kumar.utils.mapper.BookingRequestToEntityMapper;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 
 @Service
-@Slf4j
 public class BookingService {
+
+    private static final Logger log = LoggerFactory.getLogger(BookingService.class);
 
     private final BookingRepository bookingRepository;
 
@@ -70,5 +74,13 @@ public class BookingService {
             log.warn("BookingService:: No booking found with bookingId {}", bookingId);
         }
 
+    }
+
+    public List<Booking> getAllBookings() {
+        return bookingRepository.findAll();
+    }
+
+    public Booking getBookingByCode(String bookingCode) {
+        return bookingRepository.findByBookingCode(bookingCode);
     }
 }

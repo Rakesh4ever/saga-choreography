@@ -6,14 +6,16 @@ import com.kumar.events.SeatReservedEvent;
 import com.kumar.messaging.SeatReserveProducer;
 import com.kumar.repository.SeatInventoryRepository;
 import com.kumar.utils.enums.SeatStatus;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-@Slf4j
 public class SeatInventoryService {
+
+    private static final Logger log = LoggerFactory.getLogger(SeatInventoryService.class);
 
     private final SeatInventoryRepository seatInventoryRepository;
     private final SeatReserveProducer seatReserveProducer;
@@ -35,9 +37,11 @@ public class SeatInventoryService {
         List<SeatInventory> seats = seatInventoryRepository
                 .findByShowIdAndSeatNumberIn(event.showId(), event.seatIds());
 
-        // Check if all seats are available
-        boolean allAvailable = seats.stream()
-                .allMatch(s -> s.getStatus() == SeatStatus.AVAILABLE);
+        // Check if all requested seats exist and are available
+        boolean allAvailable = event.seatIds() != null
+                && !event.seatIds().isEmpty()
+                && seats.size() == event.seatIds().size()
+                && seats.stream().allMatch(s -> s.getStatus() == SeatStatus.AVAILABLE);
 
         if (allAvailable) {
             // Update seat status to LOCKED and set current booking ID
@@ -75,5 +79,19 @@ public class SeatInventoryService {
 
         seatReserveProducer
                 .publishSeatReserveEvents(new SeatReservedEvent(bookingId, false, 0));
+    }
+
+    public List<SeatInventory> getAllSeats() {
+        return seatInventoryRepository.findAll();
+    }
+
+    public List<SeatInventory> getSeatsByShowId(String showId) {
+        return seatInventoryRepository.findAll().stream()
+                .filter(s -> showId.equals(s.getShowId()))
+                .toList();
+    }
+
+    public List<SeatInventory> getSeatsByBookingId(String bookingId) {
+        return seatInventoryRepository.findByCurrentBookingId(bookingId);
     }
 }

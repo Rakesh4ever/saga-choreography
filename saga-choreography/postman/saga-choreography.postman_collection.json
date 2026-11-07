@@ -1,70 +1,300 @@
 {
   "info": {
     "_postman_id": "dd9c8900-b6fd-4a7f-a17f-2d52777f5bc8",
-    "name": "Saga Choreography Movie Booking",
-    "description": "HTTP requests for the movie booking saga. Booking Service exposes the HTTP API; Seat Inventory and Payment are Kafka-driven consumers and are observed in their application logs.",
+    "name": "Saga Choreography - All Microservices (9191, 9292, 9393)",
+    "description": "Complete Postman collection for all three microservices in the Movie Booking Saga (Choreography):\n1. Booking Service (`http://localhost:9191`)\n2. Seat Inventory Service (`http://localhost:9292`)\n3. Payment Service (`http://localhost:9393`)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
-      "key": "baseUrl",
+      "key": "bookingServiceUrl",
       "value": "http://localhost:9191",
+      "type": "string"
+    },
+    {
+      "key": "seatInventoryUrl",
+      "value": "http://localhost:9292",
+      "type": "string"
+    },
+    {
+      "key": "paymentServiceUrl",
+      "value": "http://localhost:9393",
       "type": "string"
     },
     {
       "key": "showId",
       "value": "SHOW_101",
       "type": "string"
+    },
+    {
+      "key": "bookingCode",
+      "value": "2aedc39e",
+      "type": "string"
     }
   ],
   "item": [
     {
-      "name": "Book available seat (simulated payment success)",
-      "description": "Uses seeded seat A1. The payment service succeeds for amounts at or below 2000. Confirm the asynchronous result in the Booking, Seat Inventory, and Payment service logs.",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"reservationId\": \"{{$guid}}\",\n  \"showId\": \"{{showId}}\",\n  \"seatIds\": [\"A1\"],\n  \"userId\": \"postman-user\",\n  \"timestamp\": \"{{$isoTimestamp}}\",\n  \"amount\": 1500\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
+      "name": "1. Booking Service (Port 9191)",
+      "item": [
+        {
+          "name": "Book Available Seat (Success Path - SHOW_101 Seat A5)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservationId\": \"{{$guid}}\",\n  \"showId\": \"SHOW_101\",\n  \"seatIds\": [\"A5\"],\n  \"userId\": \"user-101\",\n  \"timestamp\": \"{{$isoTimestamp}}\",\n  \"amount\": 1500\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{bookingServiceUrl}}/booking-service/bookSeat",
+            "description": "Books available seat A5 for SHOW_101 with amount 1500 (<= 2000)."
+          },
+          "response": []
         },
-        "url": "{{baseUrl}}/booking-service/bookSeat"
-      },
-      "response": []
+        {
+          "name": "Book Multiple Available Seats (Success Path - SHOW_202 Seats B1, B2)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservationId\": \"{{$guid}}\",\n  \"showId\": \"SHOW_202\",\n  \"seatIds\": [\"B1\", \"B2\"],\n  \"userId\": \"user-202\",\n  \"timestamp\": \"{{$isoTimestamp}}\",\n  \"amount\": 1800\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{bookingServiceUrl}}/booking-service/bookSeat",
+            "description": "Books available seats B1 and B2 for SHOW_202 with amount 1800 (<= 2000)."
+          },
+          "response": []
+        },
+        {
+          "name": "Book Seat (Payment Failure & Compensation - SHOW_101 Seat A2)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservationId\": \"{{$guid}}\",\n  \"showId\": \"SHOW_101\",\n  \"seatIds\": [\"A2\"],\n  \"userId\": \"user-102\",\n  \"timestamp\": \"{{$isoTimestamp}}\",\n  \"amount\": 2500\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{bookingServiceUrl}}/booking-service/bookSeat",
+            "description": "Uses available seat A2 with amount 2500 (> 2000). Triggers payment failure, releases A2 back to AVAILABLE, and marks booking FAILED."
+          },
+          "response": []
+        },
+        {
+          "name": "Book Already Reserved Seat (Seat Lock Failure - SHOW_101 Seat A4)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservationId\": \"{{$guid}}\",\n  \"showId\": \"SHOW_101\",\n  \"seatIds\": [\"A4\"],\n  \"userId\": \"user-103\",\n  \"timestamp\": \"{{$isoTimestamp}}\",\n  \"amount\": 1200\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{bookingServiceUrl}}/booking-service/bookSeat",
+            "description": "Attempts to book already RESERVED seat A4. Seat Inventory rejects lock and Booking Service marks booking FAILED."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Bookings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{bookingServiceUrl}}/booking-service/bookings",
+            "description": "Lists all bookings in MySQL along with their current status (CONFIRMED / FAILED)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Booking by Code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{bookingServiceUrl}}/booking-service/bookings/{{bookingCode}}",
+            "description": "Fetches a specific booking by bookingCode / reservationId."
+          },
+          "response": []
+        },
+        {
+          "name": "Get OpenAPI Specification",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{bookingServiceUrl}}/v3/api-docs",
+            "description": "Fetches the OpenAPI 3.0 specification from Booking Service."
+          },
+          "response": []
+        }
+      ]
     },
     {
-      "name": "Book available seat (simulated payment failure)",
-      "description": "Uses seeded seat A2. Amounts above 2000 trigger simulated payment failure and seat release. Run after importing the seed data; inspect service logs for the asynchronous rollback.",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"reservationId\": \"{{$guid}}\",\n  \"showId\": \"{{showId}}\",\n  \"seatIds\": [\"A2\"],\n  \"userId\": \"postman-user\",\n  \"timestamp\": \"{{$isoTimestamp}}\",\n  \"amount\": 2500\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
+      "name": "2. Seat Inventory Service (Port 9292)",
+      "item": [
+        {
+          "name": "Get All Seats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{seatInventoryUrl}}/seat-inventory-service/seats",
+            "description": "Returns all seats across SHOW_101, SHOW_202, and SHOW_303."
+          },
+          "response": []
         },
-        "url": "{{baseUrl}}/booking-service/bookSeat"
-      },
-      "response": []
+        {
+          "name": "Get Seats by Show ID (SHOW_101)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{seatInventoryUrl}}/seat-inventory-service/seats/show/{{showId}}",
+            "description": "Returns all seats for a specific showId (SHOW_101, SHOW_202, SHOW_303)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Seats by Booking ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{seatInventoryUrl}}/seat-inventory-service/seats/booking/{{bookingCode}}",
+            "description": "Returns seats locked or reserved for a specific bookingId."
+          },
+          "response": []
+        },
+        {
+          "name": "Reserve Seats Directly (SHOW_303 Seat C1)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": \"direct-book-303\",\n  \"userId\": \"user-303\",\n  \"showId\": \"SHOW_303\",\n  \"seatIds\": [\"C1\"],\n  \"amount\": 1200\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{seatInventoryUrl}}/seat-inventory-service/seats/reserve",
+            "description": "Directly invokes SeatInventoryService to lock seats and emit SeatReservedEvent."
+          },
+          "response": []
+        },
+        {
+          "name": "Release Seats by Booking ID",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{seatInventoryUrl}}/seat-inventory-service/seats/release/{{bookingCode}}",
+            "description": "Releases seats held by bookingCode back to AVAILABLE status."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Payment Service (Port 9393)",
+      "item": [
+        {
+          "name": "Health & Payment Limit Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{paymentServiceUrl}}/payment-service/health",
+            "description": "Returns Payment Service status and simulated limit (2000)."
+          },
+          "response": []
+        },
+        {
+          "name": "Process Payment (Success - Amount <= 2000)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": \"{{bookingCode}}\",\n  \"reserved\": true,\n  \"amount\": 1500\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{paymentServiceUrl}}/payment-service/process",
+            "description": "Processes payment for amount <= 2000 and publishes BookingPaymentEvent(paymentCompleted=true)."
+          },
+          "response": []
+        },
+        {
+          "name": "Process Payment (Failure & Rollback - Amount > 2000)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": \"{{bookingCode}}\",\n  \"reserved\": true,\n  \"amount\": 2500\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{paymentServiceUrl}}/payment-service/process",
+            "description": "Simulates payment failure (> 2000) and publishes BookingPaymentEvent(paymentCompleted=false)."
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }

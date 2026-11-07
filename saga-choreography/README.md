@@ -17,7 +17,7 @@ The animation below shows how a booking request moves through the services. If p
 | `payment-service` | 9393 | Spring Boot 3.5.7, Java 21, Spring Kafka; simulates payment processing (no payment database or external gateway) |
 | `movie-booking-commons` | — | Shared Java DTOs/events and Kafka topic/group constants, built with Maven |
 
-Infrastructure: MySQL on `localhost:3306` and Kafka on `localhost:9092`. Booking Service uses the `saga_choreography` schema, and Seat Inventory uses the `javatechie` schema. Provide each service valid MySQL credentials with access to its configured schema.
+Infrastructure: MySQL on `localhost:3306` and Kafka on `localhost:9092`. Both Booking Service and Seat Inventory Service use the `saga_choreography` schema. Provide each service valid MySQL credentials with access to its configured schema.
 
 ## Run all services manually
 
@@ -46,13 +46,11 @@ Connect to MySQL as an administrator and run:
 
 ```sql
 CREATE DATABASE IF NOT EXISTS saga_choreography;
-CREATE DATABASE IF NOT EXISTS javatechie;
 CREATE USER IF NOT EXISTS 'saga_app'@'localhost' IDENTIFIED BY 'saga_password';
 GRANT ALL PRIVILEGES ON saga_choreography.* TO 'saga_app'@'localhost';
-GRANT ALL PRIVILEGES ON javatechie.* TO 'saga_app'@'localhost';
 ```
 
-The current configuration uses `saga_choreography` for Booking and `javatechie` for Seat Inventory. The username and password in the two checked-in YAML files differ, so pass the same working credentials as environment variables when launching both apps. Hibernate creates or updates their entity tables at startup.
+Both `booking-service` and `seat-inventory-service` use the `saga_choreography` database. Pass your working MySQL credentials as environment variables when launching both apps. Hibernate creates or updates their entity tables at startup.
 
 ### 3. Build the shared module and services
 
@@ -94,7 +92,7 @@ Use your actual MySQL username and password in place of `saga_app` and `saga_pas
 After Seat Inventory starts and Hibernate creates its table, load the sample rows once:
 
 ```bash
-mysql -h127.0.0.1 -usaga_app -p javatechie < seat-inventory-service/src/main/resources/data.sql
+mysql -h127.0.0.1 -usaga_app -p saga_choreography < seat-inventory-service/src/main/resources/data.sql
 ```
 
 Enter the same MySQL password when prompted. The SQL seeds seats for `SHOW_101`, `SHOW_202`, and `SHOW_303`.

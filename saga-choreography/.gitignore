@@ -3,3 +3,12 @@
 **/target/
 **/mvnw
 **/mvnw.cmd
+postman/
+.env
+.env.*
+*.env
+.env.dev
+.env.test
+.env.prod
+
+

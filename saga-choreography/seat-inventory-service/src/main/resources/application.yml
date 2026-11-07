@@ -1,14 +1,22 @@
 spring:
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:.env.${spring.profiles.active:dev}[.properties]
+      - optional:file:../.env[.properties]
+      - optional:file:../.env.${spring.profiles.active:dev}[.properties]
+      - optional:file:saga-choreography/.env[.properties]
+      - optional:file:saga-choreography/.env.${spring.profiles.active:dev}[.properties]
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/saga_choreography
-    username: root
-    password: root
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
 
   jpa:
-    show-sql: true
+    show-sql: ${SPRING_JPA_SHOW_SQL:true}
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     properties:
@@ -16,12 +24,12 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
     defer-datasource-initialization: true
 
-#  sql:
-#    init:
-#      mode: always
+  sql:
+    init:
+      mode: always
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
